@@ -1,0 +1,39 @@
+name: Deploy ststic web site to EC2 using instance connect.
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::195275633063:role/GitHubOIDC
+          aws-region: us-east-1
+      - name: Generate temporary SSH key (valid for this pipeline only)
+        run: |
+           aws ec2-instance-connect send-ssh-public-key \
+            --instance-id i-00928abd87fa253e7 \
+            --availability-zone us-east-1c \
+            --instance-os-user ec2-user \
+            --ssh-public-key file://github_temp.pub
+       - name: Copy website files to EC2 (/var/www/html)
+         run: |
+           scp -o StrictHostKeyChecking=no -i github_temp *.html \
+           ec2-user@54.242.114.47:/var/www/html
+
+       - name: Restart Apache (httpd)
+         run: |
+          ssh -o StrictHostKeyChecking=no -i github_temp \
+          ec2-user@54.242.114.47 \
+          "sudo service httpd restart"    
+            
+      
+         
+    
+  
