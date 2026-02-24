@@ -20,7 +20,7 @@ jobs:
          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/html/
     - name: Restart Apache (httpd)
       run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem \
+          ssh -o StrictHostKeyChecking=no -i mykey.pem \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
           "sudo service httpd restart"
           
